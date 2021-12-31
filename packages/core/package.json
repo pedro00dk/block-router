@@ -1,0 +1,8 @@
+{
+    "name": "@block-router/core",
+    "description": "Core functionality of the block router",
+    "main": "index.ts",
+    "devDependencies": {},
+    "dependencies": {},
+    "scripts": {}
+}
