@@ -170,6 +170,9 @@ export class Route {
     }
     #hash: string
 
+    /*
+     * Characters used to separate blocks and parameters.
+     */
     #splitBlock = '~'
     #splitParam = ':'
 
