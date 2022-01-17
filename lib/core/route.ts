@@ -18,13 +18,6 @@ export type Stack = ReadonlyArray<Block>
  *
  * ### Examples
  *
- * For the given configuration:
- * ```typescript
- *  const configuration = { blockSeparator: '~' }
- * ```
- *
- * The following examples will be resolved as:
- *
  * ```
  * # Example 0:
  * http://localhost:3000/
@@ -38,7 +31,7 @@ export type Stack = ReadonlyArray<Block>
  * blk0: [ctx0]
  *
  * # Example 2:
- * http://localhost:3000/users/user/=123/~/edit/tab=delete/~/confirm
+ * http://localhost:3000/users/user/:123/~/edit/tab:delete/~/confirm
  * contexts:            |ctx0 |ctx1     | |ctx2           | |ctx3   |
  * blocks:              |blk0           | |blk1           | |blk2   |
  * blk0: [ctx0, ctx1]
@@ -57,13 +50,6 @@ export type Block = ReadonlyArray<Context>
  *
  * ### Examples
  *
- * For the given configuration:
- * ```typescript
- *  const configuration = { paramSeparator: '=' }
- * ```
- *
- * The following examples will be resolved as:
- *
  * ```
  * # Example 0:
  * # URL without a pathname.
@@ -78,21 +64,21 @@ export type Block = ReadonlyArray<Context>
  *
  * # Example 2:
  * # Context with one unnamed ('') property.
- * # If paramSeparator (=) is present in a path slice, it will be interpreted as a property.
- * http://localhost:3000/users/=123
+ * # If (:) is present in a path slice, it will be interpreted as a property.
+ * http://localhost:3000/users/:123
  * contexts:            |ctx0      |
  * ctx0: {__name: 'users', ['']: '123'}
  *
  * # Example 3:
  * # Context with one named property.
- * http://localhost:3000/users/user=123
+ * http://localhost:3000/users/user:123
  * contexts:            |ctx0          |
  * ctx0: {__name: 'users', user: '123'}
  *
  * # Example 4:
  * # Context with repeated properties.
  * # Properties with same key are joined with space.
- * http://localhost:3000/users/=123/id=123/=456/id=456
+ * http://localhost:3000/users/:123/id:123/:456/id:456
  * contexts:            |ctx0                         |
  * ctx1: {__name: 'user', ['']: '123 456' id: '123 456'}
  *
@@ -107,7 +93,7 @@ export type Block = ReadonlyArray<Context>
  * # Example 6:
  * # Multiple contexts with properties.
  * # Each context carries its own set of properties.
- * http://localhost:3000/users/=male/age=45/user/name=pedro/=123
+ * http://localhost:3000/users/:male/age:45/user/name:pedro/:123
  * contexts:            |ctx0              |ctx1                |
  * ctx0: {__name: 'users', ['']: 'male', age: '45' }
  * ctx1: {__name: 'user', name: 'pedro', ['']: '123'}
@@ -119,16 +105,16 @@ export type Block = ReadonlyArray<Context>
  *
  * ```
  * # Example 7:
- * # First path slice is always parsed as a context name even if it contains a paramSeparator (=).
- * http://localhost:3000/user=123
+ * # First path slice is always parsed as a context name even if it contains (:).
+ * http://localhost:3000/user:123
  * contexts:            |ctx0    |
- * ctx0: {__name: 'user=123' }
+ * ctx0: {__name: 'user:123' }
  *
  * # Example 8:
- * # First path slice contains paramSeparator (=) and extra properties.
- * http://localhost:3000/user=123/=male/age=45
+ * # First path slice contains (:) and extra properties.
+ * http://localhost:3000/user:123/:male/age:45
  * contexts:            |ctx0                 |
- * ctx0: {__name: 'user=123', ['']: 'male', age: '45' }
+ * ctx0: {__name: 'user:123', ['']: 'male', age: '45' }
  * ```
  *
  * @see Block
@@ -163,7 +149,7 @@ export class Route {
     #search: Params
 
     /**
-     * The route's parsed hash.
+     * Route's parsed hash.
      */
     get hash() {
         return this.#hash
@@ -214,7 +200,7 @@ export class Route {
                     acc.at(-1)!.push(part)
                     return acc
                 }, [])
-                .map(pathParts => this.parseBlock(pathParts)),
+                .map(this.parseBlock),
         )
 
     /**
@@ -228,11 +214,11 @@ export class Route {
         Object.freeze(
             pathParts
                 .reduce<string[][]>((acc, part, i) => {
-                    if (!i || part.includes(this.#splitParam)) acc.push([])
+                    if (!i || !part.includes(this.#splitParam)) acc.push([])
                     acc.at(-1)!.push(part)
                     return acc
                 }, [])
-                .map(pathParts => this.parseContext(pathParts)),
+                .map(this.parseContext),
         )
 
     /**
