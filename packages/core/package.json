@@ -1,6 +1,6 @@
 {
-    "name": "@block-router/core",
-    "description": "Core functionality of the block router",
+    "name": "@stack-router/core",
+    "description": "Core functionality of the stack router",
     "main": "index.ts",
     "devDependencies": {},
     "scripts": {

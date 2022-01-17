@@ -1,5 +1,5 @@
 {
-    "name": "block-router",
+    "name": "stack-router",
     "version": "0.0.0",
     "description": "Another way to handle routing in single page applications.",
     "license": "GPL-3.0",
@@ -10,12 +10,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/pedro00dk/block-router.git"
+        "url": "git+https://github.com/pedro00dk/stack-router.git"
     },
     "bugs": {
-        "url": "https://github.com/pedro00dk/block-router/issues"
+        "url": "https://github.com/pedro00dk/stack-router/issues"
     },
-    "homepage": "https://github.com/pedro00dk/block-router#readme",
+    "homepage": "https://github.com/pedro00dk/stack-router#readme",
     "devDependencies": {
         "prettier": "2.5.1",
         "typescript": "4.5.4"
