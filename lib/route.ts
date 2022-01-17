@@ -217,8 +217,8 @@ export class Route {
                 .split('/')
                 .filter(Boolean)
                 .reduce<string[][]>((acc, part, i) => {
-                    if (!i || part === configuration.blockSeparator) acc.push([])
-                    acc.at(-1).push(part)
+                    if (!i || part === configuration.splitBlock) acc.push([])
+                    acc.at(-1)!.push(part)
                     return acc
                 }, [])
                 .map(pathParts => this.parseBlock(pathParts, configuration)),
@@ -236,8 +236,8 @@ export class Route {
         Object.freeze(
             pathParts
                 .reduce<string[][]>((acc, part, i) => {
-                    if (!i || part.includes(configuration.paramSeparator)) acc.push([])
-                    acc.at(-1).push(part)
+                    if (!i || part.includes(configuration.splitParam)) acc.push([])
+                    acc.at(-1)!.push(part)
                     return acc
                 }, [])
                 .map(pathParts => this.parseContext(pathParts, configuration)),
@@ -257,7 +257,7 @@ export class Route {
     parseContext = (pathParts: string[], configuration = this.configuration): Context =>
         Object.freeze(
             pathParts
-                .map((param, i) => (!i ? ['__name', param] : param.split(configuration.paramSeparator)))
+                .map((param, i) => (!i ? ['__name', param] : param.split(configuration.splitParam)))
                 .reduce<Mutable<Context>>(
                     (acc, [key, value]) => {
                         acc[key] = `${acc[key] ?? ''}${acc[key] ? ' ' : ''}${value ?? ''}`
@@ -303,7 +303,7 @@ export class Route {
      * @returns A pathname string with a leading `/` but without a trailing `/`.
      */
     stringifyStack = (stack: Stack = this.stack, configuration = this.configuration) =>
-        stack.map(block => this.stringifyBlock(block, configuration)).join(`/${configuration.blockSeparator}`)
+        stack.map(block => this.stringifyBlock(block, configuration)).join(`/${configuration.splitBlock}`)
 
     /**
      * Stringify a given `block` object.
@@ -327,10 +327,7 @@ export class Route {
         const contextEntries = Object.entries(props)
 
         return `/${__name}${contextEntries.length ? '/' : ''}${contextEntries
-            .map(
-                ([key, value]) =>
-                    `${encodeURIComponent(key)}${configuration.paramSeparator}${encodeURIComponent(value)}`,
-            )
+            .map(([key, value]) => `${encodeURIComponent(key)}${configuration.splitParam}${encodeURIComponent(value)}`)
             .join('/')}`
     }
 

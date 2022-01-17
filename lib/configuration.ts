@@ -1,5 +1,5 @@
 /**
- * Stack router configuration object.
+ * Context router configuration object.
  *
  * @member splitBlock - Separator of route blocks.
  *         It must be a length 1 string containing one of the following non URI escapable characters: `-_.!~*'()`.

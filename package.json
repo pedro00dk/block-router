@@ -25,7 +25,7 @@
         "cypress": "9.2.1",
         "prettier": "2.5.1",
         "rollup-plugin-analyzer": "4.0.0",
-        "typescript": "next",
+        "typescript": "4.6.0-dev.20220117",
         "vite": "2.7.12"
     },
     "peerDependencies": {
