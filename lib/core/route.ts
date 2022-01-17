@@ -1,5 +1,3 @@
-import { Configuration, defaultConfiguration, loadConfiguration } from './configuration'
-
 type Mutable<T> = {
     -readonly [P in keyof T]: T[P]
 }
@@ -149,14 +147,6 @@ export type Params = Readonly<{ [key: string]: string }>
  */
 export class Route {
     /**
-     * Route's configuration object.
-     */
-    get configuration() {
-        return this.#configuration
-    }
-    #configuration: Configuration
-
-    /**
      * Route's parsed stack.
      */
     get stack() {
@@ -180,16 +170,17 @@ export class Route {
     }
     #hash: string
 
+    #splitBlock = '~'
+    #splitParam = ':'
+
     /**
      * Create a `Route` object from the given `url`.
      *
      * @param url - `URL` or `Location` to be parsed. Default: `window.location`.
-     * @param configuration - The configuration object. Default: `defaultConfiguration`.
      * @returns A `Route` object.
      */
-    constructor(url: URL | Location = window.location, configuration: Partial<Configuration> = defaultConfiguration) {
-        this.#configuration = loadConfiguration(configuration)
-        this.#stack = this.parseStack(url.pathname, this.#configuration)
+    constructor(url: URL | Location = window.location) {
+        this.#stack = this.parseStack(url.pathname)
         this.#search = this.parseSearch(url.search)
         this.#hash = this.parseHash(url.hash)
     }
@@ -207,40 +198,38 @@ export class Route {
      * Parse `pathname` and return its stack of blocks.
      *
      * @param pathname - String containing the url pathname.
-     * @param configuration - The configuration object. Default: `this.configuration`.
      * @returns A `Stack` object
      * @see Stack
      */
-    parseStack = (pathname: string, configuration = this.configuration): Stack =>
+    parseStack = (pathname: string): Stack =>
         Object.freeze(
             pathname
                 .split('/')
                 .filter(Boolean)
                 .reduce<string[][]>((acc, part, i) => {
-                    if (!i || part === configuration.splitBlock) acc.push([])
+                    if (!i || part === this.#splitBlock) acc.push([])
                     acc.at(-1)!.push(part)
                     return acc
                 }, [])
-                .map(pathParts => this.parseBlock(pathParts, configuration)),
+                .map(pathParts => this.parseBlock(pathParts)),
         )
 
     /**
      * Parse `pathParts` into a `Block` containing zero or more `Context`s.
      *
      * @param pathParts - Array containing slices of a url `pathname` split by `/`.
-     * @param configuration - The configuration object. Default: `this.configuration`.
      * @returns A `Block` object.
      * @see Block
      */
-    parseBlock = (pathParts: string[], configuration = this.configuration): Block =>
+    parseBlock = (pathParts: string[]): Block =>
         Object.freeze(
             pathParts
                 .reduce<string[][]>((acc, part, i) => {
-                    if (!i || part.includes(configuration.splitParam)) acc.push([])
+                    if (!i || part.includes(this.#splitParam)) acc.push([])
                     acc.at(-1)!.push(part)
                     return acc
                 }, [])
-                .map(pathParts => this.parseContext(pathParts, configuration)),
+                .map(pathParts => this.parseContext(pathParts)),
         )
 
     /**
@@ -250,14 +239,13 @@ export class Route {
      * context props.
      *
      * @param pathParts - Array containing slices of a url `pathname` split by `/`.
-     * @param configuration - The configuration object. Default: `this.configuration`.
      * @returns A `Context` object.
      * @see Context
      */
-    parseContext = (pathParts: string[], configuration = this.configuration): Context =>
+    parseContext = (pathParts: string[]): Context =>
         Object.freeze(
             pathParts
-                .map((param, i) => (!i ? ['__name', param] : param.split(configuration.splitParam)))
+                .map((param, i) => (!i ? ['__name', param] : param.split(this.#splitParam)))
                 .reduce<Mutable<Context>>(
                     (acc, [key, value]) => {
                         acc[key] = `${acc[key] ?? ''}${acc[key] ? ' ' : ''}${value ?? ''}`
@@ -299,35 +287,30 @@ export class Route {
      * Stringify a given `stack` object.
      *
      * @param context - A `stack` object to be stringified. Default: `this.stack`.
-     * @param configuration - The configuration object. Default: `this.configuration`.
      * @returns A pathname string with a leading `/` but without a trailing `/`.
      */
-    stringifyStack = (stack: Stack = this.stack, configuration = this.configuration) =>
-        stack.map(block => this.stringifyBlock(block, configuration)).join(`/${configuration.splitBlock}`)
+    stringifyStack = (stack: Stack = this.stack) =>
+        stack.map(block => this.stringifyBlock(block)).join(`/${this.#splitBlock}`)
 
     /**
      * Stringify a given `block` object.
      *
      * @param context - A `Block` object to be stringified.
-     * @param configuration - The configuration object. Default: `this.configuration`.
      * @returns A pathname string with a leading `/` but without a trailing `/`.
      */
-    stringifyBlock = (block: Block, configuration = this.configuration) =>
-        block.map(context => this.stringifyContext(context, configuration)).join('/')
+    stringifyBlock = (block: Block) => block.map(context => this.stringifyContext(context)).join('/')
 
     /**
      * Stringify a given `context` object.
      *
      * @param context - A `Context` object to be stringified.
-     * @param configuration - The configuration object. Default: `this.configuration`.
      * @returns A pathname string with a leading `/` but without a trailing `/`.
      */
-    stringifyContext = (context: Context, configuration = this.configuration) => {
+    stringifyContext = (context: Context) => {
         const { __name, ...props } = context
         const contextEntries = Object.entries(props)
-
         return `/${__name}${contextEntries.length ? '/' : ''}${contextEntries
-            .map(([key, value]) => `${encodeURIComponent(key)}${configuration.splitParam}${encodeURIComponent(value)}`)
+            .map(([key, value]) => `${encodeURIComponent(key)}${this.#splitParam}${encodeURIComponent(value)}`)
             .join('/')}`
     }
 
