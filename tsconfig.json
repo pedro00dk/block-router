@@ -6,17 +6,16 @@
         "forceConsistentCasingInFileNames": true,
         "isolatedModules": true,
         "jsx": "react",
-        "lib": ["esnext", "dom", "dom.iterable"],
-        "module": "esnext",
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        "module": "ESNext",
         "moduleResolution": "node",
         "noEmit": true,
-        "noFallthroughCasesInSwitch": true,
         "resolveJsonModule": true,
         "skipLibCheck": true,
         "strict": true,
-        "target": "esnext",
+        "target": "ESNext",
         "types": ["node", "vite/client", "cypress", "@testing-library/cypress"]
     },
-    "include": ["cypress/**/*", "src/**/*"],
-    "exclude": ["src/**/*.test.ts?"]
+    "include": ["**/cypress/**/*", "**/src/**/*"],
+    "exclude": ["**/src/**/*.test.ts?"]
 }

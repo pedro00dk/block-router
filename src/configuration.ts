@@ -1,17 +1,17 @@
 /**
  * Stack router configuration object.
  *
- * @member blockSeparator - Separator of route blocks.
+ * @member splitBlock - Separator of route blocks.
  *         It must be a length 1 string containing one of the following non URI escapable characters: `-_.!~*'()`.
  *         Default: `~`
- * @member paramSeparator - Separator of context properties keys and values.
+ * @member splitParam - Separator of context properties keys and values.
  *         It must be a length 1 string containing any character except for the reserved characters: `;/?:@&+$#`.
  *         Note that `=` is a reserved character, but it is supported.
  *         Default: `=`
  */
 export type Configuration = {
-    blockSeparator: '-' | '_' | "'" | '.' | '!' | '~' | '*'
-    paramSeparator: string
+    splitBlock: '-' | '_' | "'" | '.' | '!' | '~' | '*'
+    splitParam: string
 }
 
 /**
@@ -19,8 +19,8 @@ export type Configuration = {
  * @see Configuration
  */
 export const defaultConfiguration: Configuration = Object.freeze({
-    blockSeparator: '~',
-    paramSeparator: '=',
+    splitBlock: '~',
+    splitParam: '=',
 })
 
 /**
@@ -33,13 +33,9 @@ export const defaultConfiguration: Configuration = Object.freeze({
  */
 export const loadConfiguration = (configuration: Partial<Configuration>): Readonly<Configuration> => {
     const final = Object.freeze({ ...defaultConfiguration, ...configuration })
-    if (final.paramSeparator.length !== 1)
-        throw new Error(`Invalid blockSeparator, must 1 length string. Got: "${final.blockSeparator}".`)
-    if (!['-', '_', "'", '.', '!', '~', '*'].includes(final.blockSeparator))
-        throw new Error(`Invalid blockSeparator, must be one of -_.!~*'(). Got: "${final.blockSeparator}".`)
-    if (final.paramSeparator.length !== 1)
-        throw new Error(`Invalid paramSeparator, must 1 length string. Got: "${final.paramSeparator}".`)
-    if ([';', '/', '?', ':', '@', '&', '+', '$', '#'].includes(final.paramSeparator))
-        throw new Error(`Invalid paramSeparator, must not contain any of ;/?:@&+$#. Got: "${final.paramSeparator}".`)
+    if (!['-', '_', "'", '.', '!', '~', '*'].includes(final.splitBlock))
+        throw new Error(`Invalid splitBlock, must be one of -_.!~*'(). Got: "${final.splitBlock}".`)
+    if (final.splitParam.length !== 1 || [';', '/', '?', ':', '@', '&', '+', '$', '#'].includes(final.splitParam))
+        throw new Error(`Invalid splitParam, must be 1 length string except for ;/?:@&+$#. Got: "${final.splitParam}".`)
     return final
 }

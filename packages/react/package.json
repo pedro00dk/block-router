@@ -1,8 +1,0 @@
-{
-    "name": "@stack-router/react",
-    "description": "Utilities for working with react",
-    "main": "index.ts",
-    "devDependencies": {},
-    "dependencies": {},
-    "scripts": {}
-}
