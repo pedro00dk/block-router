@@ -16,6 +16,6 @@
         "target": "ESNext",
         "types": ["node", "vite/client", "cypress", "@testing-library/cypress"]
     },
-    "include": ["**/cypress/**/*", "**/src/**/*"],
-    "exclude": ["**/src/**/*.test.ts?"]
+    "include": ["**/cypress/**/*", "**/lib/**/*", "**/src/**/*"],
+    "exclude": ["**/lib/**/*.test.ts?", "**/src/**/*.test.ts?"]
 }

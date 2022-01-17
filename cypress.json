@@ -1,0 +1,17 @@
+{
+    "$schema": "https://raw.githubusercontent.com/cypress-io/cypress/develop/cli/schema/cypress.schema.json",
+    "baseUrl": "http://localhost:3000",
+    "pluginsFile": "cypress/plugins.ts",
+    "supportFile": "cypress/support.ts",
+    "video": false,
+    "viewportHeight": 700,
+    "viewportWidth": 1000,
+    "component": {
+        "componentFolder": "./src/",
+        "testFiles": "**/*.test.ct.{ts,tsx}"
+    },
+    "e2e": {
+        "integrationFolder": "./src/",
+        "testFiles": "**/*.test.e2e.{ts,tsx}"
+    }
+}

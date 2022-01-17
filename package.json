@@ -19,18 +19,27 @@
     "devDependencies": {
         "@cypress/vite-dev-server": "2.2.2",
         "@testing-library/cypress": "8.0.2",
+        "@types/react-dom": "17.0.11",
+        "@types/react": "17.0.38",
+        "@vitejs/plugin-react-refresh": "1.3.6",
         "cypress": "9.2.1",
         "prettier": "2.5.1",
-        "typescript": "4.5.4",
-        "vite": "2.7.12",
-        "@types/react": "17.0.38",
-        "@types/react-dom": "17.0.11"
+        "rollup-plugin-analyzer": "4.0.0",
+        "typescript": "next",
+        "vite": "2.7.12"
     },
     "peerDependencies": {
         "react": ">=16.8",
         "react-dom": ">=16.8"
     },
     "scripts": {
-        "format": "prettier --write \"**src/**/*\""
+        "start": "vite",
+        "prettier:format": "prettier --write \"**src/**/*\"",
+        "prettier:check": "prettier --check \"**src/**/*\"",
+        "cypress:install": "cypress install && cypress verify",
+        "cypress:e2e:open": "cypress open",
+        "cypress:e2e:run": "cypress run",
+        "cypress:ct:open": "cypress open-ct",
+        "cypress:ct:run": "cypress run-ct"
     }
 }
