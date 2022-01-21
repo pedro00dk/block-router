@@ -7,6 +7,7 @@ const config: UserConfig = {
     publicDir: './public/',
     build: { outDir: '../build/', minify: 'esbuild', target: 'es2021' },
     server: { port: 3000 },
+    preview: { port: 3001 },
     plugins: [pluginReactRefresh(), pluginAnalyzer()],
 }
 
