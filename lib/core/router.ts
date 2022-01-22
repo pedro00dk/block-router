@@ -1,8 +1,14 @@
 import React from 'react'
 import { Route } from './route'
 
-export type Rule = ('/' | '~' | string | { [k: string]: ((v: string) => boolean) | undefined | any })[]
-type Checkpoint = { block: number; context: number }
+export type Checkpoint = Readonly<{ block: number; context: number }> | undefined
+export type Rule = (
+    | '/'
+    | '~'
+    | string
+    | RegExp
+    | { [k: string]: string | RegExp | ((v?: string) => boolean) | undefined | any }
+)[]
 
 /**
  * The Router object manages navigation, route matching, and route events.
@@ -32,7 +38,7 @@ export class Router {
      * Notifier used for the base selector.
      * @see Notifier
      */
-    #notifier = new Notifier(undefined, [], { block: 0, context: -1 })
+    #notifier = new Notifier(undefined, [], Object.freeze({ block: 0, context: -1 }))
 
     /**
      * React context storing selection checkpoints.
@@ -46,41 +52,52 @@ export class Router {
      * Create the router singleton instance, if it already exists, an error is thrown.
      *
      * The preferred way to access the router is via the `Router.singleton` getter.
-     *
-     * @throws Error - If the router singleton already exists.
      */
     constructor() {
-        if (Router.#singleton) throw new Error('Router is already initialized.')
+        if (Router.#singleton) return Router.#singleton
         Router.#singleton = this
         this.#route = new Route()
-        this.#context.displayName = 'ContextRouter'
+        this.#context.displayName = 'Notifier'
     }
 
-    //
-    // Selector utilities
-    //
-
-    select = (rule: Rule, checkpoint: Checkpoint | undefined) => {
+    /**
+     * Selector checks if a given `rule` matches the current route, starting from a `checkpoint`.
+     *
+     * @param rule - The rule to match.
+     * @param checkpoint - Starting checkpoint.
+     * @returns The resulting checkpoint if `rule` matches, `undefined` otherwise.
+     */
+    selector = (rule: Rule, checkpoint: Checkpoint): Checkpoint => {
         if (!checkpoint) return undefined
         let next = { ...checkpoint }
-        for (let i = 0; i < rule.length; i++) {
-            const part = rule[i]
-            if (part === '/') {
-                if (next.block > 0 || next.context > -1) return undefined
-            } else if (typeof part === 'string') {
-                next.context += 1
-                if (this.route.stack[next.block]?.[next.context]?.__name !== part) return undefined
-            }
-        }
-        return next
+        return rule.every(part =>
+            part === '/'
+                ? next.block === 0 && next.context === -1
+                : part === '~'
+                ? ((next.context = -1), this.route.stack[++next.block])
+                : typeof part === 'string'
+                ? this.route.stack[next.block]?.[++next.context]?.__name === part
+                : part instanceof RegExp
+                ? this.route.stack[next.block]?.[++next.context]?.__name.match(part)
+                : typeof part === 'object' &&
+                  next.context > -1 &&
+                  Object.entries(part).every(([k, v]) =>
+                      v instanceof RegExp
+                          ? this.route.stack[next.block]?.[next.context]?.[k].match(v)
+                          : typeof v === 'function'
+                          ? v(this.route.stack[next.block]?.[next.context]?.[k])
+                          : v == undefined
+                          ? !(k in this.route.stack[next.block]?.[next.context])
+                          : this.route.stack[next.block]?.[next.context]?.[k] === String(v),
+                  ),
+        )
+            ? next
+            : undefined
     }
-
-    //
 
     navigate = (to: string, options?: { replace?: boolean; data?: any; unused?: string }) => {
         if (options?.replace) window.history.replaceState(options?.data, options?.unused ?? '', to)
         else window.history.pushState(options?.data, options?.unused ?? '', to)
-        console.log('url change', to)
         this.#route = new Route()
         this.#notifier.notify({ block: 0, context: -1 })
     }
@@ -105,18 +122,18 @@ class Notifier {
 
     /**
      * The last checkpoint provided by the `constructor` or the `notify` function.
-     * A non null value means the notifier is currently in a matching state.
+     *
      * @see Checkpoint
      */
     get checkpoint() {
         return this.#checkpoint
     }
-    #checkpoint: Checkpoint | undefined
+    #checkpoint: Checkpoint
 
     /**
      * Subscriptions registered to the notifier.
      */
-    #subscriptions: ((checkpoint?: Checkpoint) => void)[] = []
+    #subscriptions: ((checkpoint: Checkpoint) => void)[] = []
 
     /**
      * Create the notifier and subscribes itself to the parent notifier.
@@ -125,10 +142,10 @@ class Notifier {
      * @param rule - The selector rule used to compute the current checkpoint.
      * @param checkpoint - The initial checkpoint, only used if `parent` is undefined.
      */
-    constructor(parent: Notifier | undefined, rule: Rule, checkpoint?: Checkpoint | undefined) {
+    constructor(parent: Notifier | undefined, rule: Rule, checkpoint: Checkpoint) {
         this.#parent = parent
         this.#rule = rule
-        this.#checkpoint = this.#parent ? Router.singleton.select(this.#rule, this.#parent.checkpoint) : checkpoint
+        this.#checkpoint = this.#parent ? Router.singleton.selector(this.#rule, this.#parent.checkpoint) : checkpoint
         this.#parent?.subscribe(this.notify)
     }
 
@@ -138,7 +155,7 @@ class Notifier {
      * @param checkpoint - The parent checkpoint.
      */
     notify = (checkpoint?: Checkpoint) => {
-        this.#checkpoint = this.#parent ? Router.singleton.select(this.#rule, this.#parent.checkpoint) : checkpoint
+        this.#checkpoint = this.#parent ? Router.singleton.selector(this.#rule, this.#parent.checkpoint) : checkpoint
         this.#subscriptions.forEach(subscription => subscription(this.#checkpoint))
     }
 
@@ -168,7 +185,7 @@ export const useSelector = (rule: Rule) => {
     const match = React.useRef(false)
     const parent = React.useContext(Router.singleton.context)
     const { notifier, unsubscribe } = React.useMemo(() => {
-        const notifier = new Notifier(parent, rule)
+        const notifier = new Notifier(parent, rule, undefined)
         const unsubscribe = notifier //
             .subscribe(checkpoint => match.current !== !!checkpoint && ((match.current = !!checkpoint), update()))
         match.current = !!notifier.checkpoint
