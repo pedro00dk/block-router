@@ -1,33 +1,36 @@
 import React from 'react'
-import { Router } from '../lib/core/router'
-import { Selector, useRoute } from '../lib/react/hooks'
+import { Router, Selector } from '../lib/core/router'
 
 export const App = () => {
-    const route = useRoute()
+    const [r, setR] = React.useState('1')
 
-    console.log(route)
-
+    console.log(`app render`, r)
+    const match = false
     return (
         <>
-            <Selector selector={['']}>
-                <div onClick={() => Router.singleton.navigate('1')}>0</div>
+            <Selector rule={[]} key='0'>
+                <div onClick={() => Router.singleton.navigate('/1')}>0</div>
             </Selector>
-            <Selector selector={['1']}>
-                <div onClick={() => Router.singleton.navigate('2')}>1</div>
+            <Selector rule={[r]} key='1'>
+                {
+                    <>
+                        <div onClick={() => Router.singleton.navigate('/1/2')}>1 {match.toString()}</div>
+
+                        <Selector rule={['2']} key='2'>
+                            {match => <div onClick={() => Router.singleton.navigate('/3')}>1/2 {match.toString()}</div>}
+                        </Selector>
+                    </>
+                }
             </Selector>
-            <Selector selector={['2']}>
-                <div onClick={() => Router.singleton.navigate('3')}>2</div>
-                <Selector selector={['1']}>
-                    <div onClick={() => Router.singleton.navigate('2')}>1</div>
+            <Selector rule={['3']} key='3'>
+                <div onClick={() => Router.singleton.navigate('/3/4')}>3</div>
+                <Selector rule={['4']} key='4'>
+                    <div onClick={() => Router.singleton.navigate('/')}>3/4</div>
                 </Selector>
             </Selector>
-            <Selector selector={['3']}>
-                <div onClick={() => Router.singleton.navigate('4')}>3</div>
-            </Selector>
-            <Selector selector={['4']}>
-                <div onClick={() => Router.singleton.navigate('/')}>4</div>
-            </Selector>
-            <dialog open>test</dialog>
+            <button onClick={() => setR(r == '1' ? '3' : '1')}>here</button>
         </>
     )
 }
+
+let i = 0
