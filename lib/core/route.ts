@@ -121,7 +121,10 @@ export type Block = ReadonlyArray<Context>
  */
 export type Context = Readonly<{ __name: string; [key: string]: string }>
 
-export type Params = Readonly<{ [key: string]: string }>
+/**
+ * Type that represents parameters extracted from a URL's search section.
+ */
+export type Search = Readonly<{ [key: string]: string }>
 
 /**
  * The Route object stores a opinionated view of a given `URL` or `Location`.
@@ -146,7 +149,7 @@ export class Route {
     get search() {
         return this.#search
     }
-    #search: Params
+    #search: Search
 
     /**
      * Route's parsed hash.
@@ -248,17 +251,17 @@ export class Route {
      * Parse a url `search` string and return its key-value pairs.
      *
      * @param search - Search string, it may or may not start with `?`.
-     * @returns A `Params` object.
-     * @see Params
+     * @returns A `Search` object.
+     * @see Search
      */
-    parseSearch = (search: string): Params =>
+    parseSearch = (search: string): Search =>
         Object.freeze(
             search
                 .slice(+search.startsWith('?'))
                 .split('&')
                 .filter(Boolean)
                 .map(param => param.split('='))
-                .reduce<Mutable<Params>>((acc, [key, value]) => {
+                .reduce<Mutable<Search>>((acc, [key, value]) => {
                     acc[key] = `${acc[key] ?? ''}${acc[key] ? ' ' : ''}${value ?? ''}`
                     return acc
                 }, {}),
