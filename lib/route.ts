@@ -159,12 +159,6 @@ export class Route {
     }
     #hash: string
 
-    /*
-     * Characters used to separate blocks and parameters.
-     */
-    #splitBlock = '~'
-    #splitParam = ':'
-
     /**
      * Create a `Route` object from the given `url`.
      *
@@ -198,11 +192,7 @@ export class Route {
             pathname
                 .split('/')
                 .filter(Boolean)
-                .reduce<string[][]>((acc, part, i) => {
-                    if (!i || part === this.#splitBlock) acc.push([])
-                    acc.at(-1)!.push(part)
-                    return acc
-                }, [])
+                .reduce<string[][]>((a, p, i) => ((!i || p === '~') && a.push([]), a.at(-1)!.push(p), a), [])
                 .map(this.parseBlock),
         )
 
@@ -216,11 +206,7 @@ export class Route {
     parseBlock = (pathParts: string[]): Block =>
         Object.freeze(
             pathParts
-                .reduce<string[][]>((acc, part, i) => {
-                    if (!i || !part.includes(this.#splitParam)) acc.push([])
-                    acc.at(-1)!.push(part)
-                    return acc
-                }, [])
+                .reduce<string[][]>((a, p, i) => ((!i || !p.includes(':')) && a.push([]), a.at(-1)!.push(p), a), [])
                 .map(this.parseContext),
         )
 
@@ -237,14 +223,8 @@ export class Route {
     parseContext = (pathParts: string[]): Context =>
         Object.freeze(
             pathParts
-                .map((param, i) => (!i ? ['__name', param] : param.split(this.#splitParam)))
-                .reduce<Mutable<Context>>(
-                    (acc, [key, value]) => {
-                        acc[key] = `${acc[key] ?? ''}${acc[key] ? ' ' : ''}${value ?? ''}`
-                        return acc
-                    },
-                    { __name: '' },
-                ),
+                .map((param, i) => (!i ? ['__name', param] : param.split(':')).map(decodeURIComponent))
+                .reduce<Mutable<Context>>((a, [k, v = '']) => ((a[k] = a[k] ? `${a[k]} ${v}` : v), a), { __name: '' }),
         )
 
     /**
@@ -261,10 +241,7 @@ export class Route {
                 .split('&')
                 .filter(Boolean)
                 .map(param => param.split('='))
-                .reduce<Mutable<Search>>((acc, [key, value]) => {
-                    acc[key] = `${acc[key] ?? ''}${acc[key] ? ' ' : ''}${value ?? ''}`
-                    return acc
-                }, {}),
+                .reduce<Mutable<Search>>((a, [k, v = '']) => ((a[k] = a[k] ? `${a[k]} ${v}` : v), a), {}),
         )
 
     /**
@@ -281,8 +258,7 @@ export class Route {
      * @param context - A `stack` object to be stringified. Default: `this.stack`.
      * @returns A pathname string with a leading `/` but without a trailing `/`.
      */
-    stringifyStack = (stack: Stack = this.stack) =>
-        stack.map(block => this.stringifyBlock(block)).join(`/${this.#splitBlock}`)
+    stringifyStack = (stack: Stack = this.stack) => stack.map(block => this.stringifyBlock(block)).join(`/~`)
 
     /**
      * Stringify a given `block` object.
@@ -302,7 +278,7 @@ export class Route {
         const { __name, ...props } = context
         const contextEntries = Object.entries(props)
         return `/${__name}${contextEntries.length ? '/' : ''}${contextEntries
-            .map(([key, value]) => `${encodeURIComponent(key)}${this.#splitParam}${encodeURIComponent(value)}`)
+            .map(([key, value]) => `${encodeURIComponent(key)}:${encodeURIComponent(value)}`)
             .join('/')}`
     }
 
